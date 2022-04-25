@@ -54,3 +54,7 @@ android {
 flutter {
     source '../..'
 }
+
+dependencies {
+    implementation 'com.googlecode.json-simple:json-simple:1.1.1'
+}
