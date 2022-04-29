@@ -18,12 +18,14 @@ class MyApp extends StatelessWidget {
       theme: ThemeData(
         primarySwatch: Colors.red,
       ),
-      routes: {
-        '/': (context) => Loading(),
-        '/login': (context) => Login(),
-        '/overview': (context) => Overview(),
-        '/chat': (context) => Chat(),
-      },
+      home: Chat(),
+      // initialRoute: '/chat',
+      // routes: {
+      //   '/': (context) => Loading(),
+      //   '/login': (context) => Login(),
+      //   '/overview': (context) => Overview(),
+      //   '/chat': (context) => Chat(),
+      // },
     );
   }
 }
