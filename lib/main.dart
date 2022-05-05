@@ -14,18 +14,18 @@ class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      title: 'Messpeer',
-      theme: ThemeData(
-        primarySwatch: Colors.red,
-      ),
-      home: Chat(),
-      // initialRoute: '/chat',
-      // routes: {
-      //   '/': (context) => Loading(),
-      //   '/login': (context) => Login(),
-      //   '/overview': (context) => Overview(),
-      //   '/chat': (context) => Chat(),
-      // },
-    );
+        title: 'Messpeer',
+        theme: ThemeData(
+          primarySwatch: Colors.blueGrey,
+        ),
+        home: Overview()
+        // initialRoute: '/chat',
+        // routes: {
+        //   '/': (context) => Loading(),
+        //   '/login': (context) => Login(),
+        //   '/overview': (context) => Overview(),
+        //   '/chat': (context) => Chat(),
+        // },
+        );
   }
 }
