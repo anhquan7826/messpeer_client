@@ -1,8 +1,6 @@
 package com.group2.messpeer_client.connection;
 
-import java.io.IOException;
 import java.util.LinkedList;
-import java.util.Observer;
 import java.util.Queue;
 
 public class ServerCommunicator extends Thread {
@@ -12,8 +10,12 @@ public class ServerCommunicator extends Thread {
 
     ServerCommunicator(Connection connection) {
         this.connection = connection;
-        commandQueue = new LinkedList<String>();
-        resultQueue = new LinkedList<String>();
+        commandQueue = new LinkedList<>();
+        resultQueue = new LinkedList<>();
+    }
+
+    public Queue<String> getCommandQueue() {
+        return commandQueue;
     }
 
     @Override

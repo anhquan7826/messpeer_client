@@ -5,6 +5,7 @@ import android.os.Bundle;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
+import com.group2.messpeer_client.Json_in_out.JsonMaker;
 import com.group2.messpeer_client.connection.Connection;
 import com.group2.messpeer_client.connection.ServerCommunicator;
 
@@ -23,7 +24,7 @@ public class MainActivity extends FlutterActivity {
         super.onCreate(savedInstanceState);
         connection.start();
         try {
-            connection.getServerCommunicator();
+            serverCommunicator = connection.getServerCommunicator();
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -36,15 +37,30 @@ public class MainActivity extends FlutterActivity {
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL).setMethodCallHandler(
                 (call, result) -> {
                     if (call.method.equals("authenticate")) {
-                        result.success(connection.authenticate(call.argument("username"), call.argument("password")));
+                        String username = call.argument("username");
+                        String password = call.argument("password");
+                        result.success(connection.authenticate(username, password));
                     } else if (call.method.equals("sendMessage")) {
                         String username = call.argument("username");
-                        String groupID = call.argument("groupID");
-                        String message = call.argument("message");
+                        String groupChatID = call.argument("groupChatID");
+                        String message = call.argument("messageObject");
                         // TODO: turn raw message to json object
-                    } else if (call.method.equals("createGroupChat")) {
-                        String name = call.argument("name");
-                        
+                        serverCommunicator.getCommandQueue().add(JsonMaker.MessagesJson(username, groupChatID, message, "22-11-22"));
+                    } else if (call.method.equals("groupChatCreate")) {
+                        String groupChatID = call.argument("groupChatID");
+                        serverCommunicator.getCommandQueue().add(JsonMaker.GroupJson(groupChatID));
+                    } else if (call.method.equals("groupChatDelete")) {
+                        String groupChatID = call.argument("groupChatID");
+                        serverCommunicator.getCommandQueue().add(JsonMaker.GroupJson(groupChatID));
+                    } else if (call.method.equals("groupChatAdd")) {
+                        String username = call.argument("username");
+                        serverCommunicator.getCommandQueue().add(JsonMaker.UserJson(username));
+                    } else if (call.method.equals("groupChatKick")) {
+                        String username = call.argument("username");
+                        serverCommunicator.getCommandQueue().add(JsonMaker.UserJson(username));
+                    } else if (call.method.equals("groupChatChangeHost")) {
+                        String username = call.argument("username");
+                        serverCommunicator.getCommandQueue().add(JsonMaker.UserJson(username));
                     }
                 }
         );
