@@ -10,10 +10,19 @@ class Chat extends StatefulWidget {
 }
 
 class _ChatState extends State<Chat> {
-  final TextEditingController _messageController = TextEditingController();
+  late TextEditingController _messageController;
+  late Map<String, String> data;
+
+  @override
+  void initState() {
+    _messageController = TextEditingController();
+    data = {};
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
+    data = ModalRoute.of(context)!.settings.arguments as Map<String, String>;
     return Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -78,7 +87,7 @@ class _ChatState extends State<Chat> {
         ),
         body: Column(
           children: <Widget>[
-            messageView(),
+            messageView(data['groupID']),
             chatBox(_messageController),
           ],
         ));
