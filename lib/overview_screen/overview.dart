@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:messpeer_client/utils/BackendMethod.dart';
 
 class Overview extends StatefulWidget {
   const Overview({Key? key}) : super(key: key);
@@ -8,48 +9,75 @@ class Overview extends StatefulWidget {
 }
 
 class _OverviewState extends State<Overview> {
-  Map testMap = {
-    'Alice': 'hello',
-    'Bob': 'what cha doin?',
-  };
+  late TextEditingController _searchController;
+  late List<String> groupList;
+
+  @override
+  void initState() {
+    _searchController = TextEditingController();
+    BackendMethod.getInstance()!.getGroupIDList();
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        toolbarHeight: 70.0,
-        leadingWidth: 70.0,
+        toolbarHeight: 60.0,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.blueGrey[900],
-        title: ElevatedButton.icon(
-          onPressed: () {},
-          icon: const CircleAvatar(
-            child: Icon(Icons.person),
-            radius: 25.0,
+        leading: const Padding(
+          padding: EdgeInsets.only(left: 15.0, top: 10.0, bottom: 10.0),
+          child: CircleAvatar(
+            child: Icon(
+              Icons.person,
+              size: 15.0,
+            ),
           ),
-          label: const Text('Current User'),
-          style: ButtonStyle(
-            backgroundColor: MaterialStateProperty.all(Colors.transparent),
-            elevation: MaterialStateProperty.all(0)
+        ),
+        title: TextField(
+          controller: _searchController,
+          autocorrect: false,
+          enableSuggestions: false,
+          style: const TextStyle(
+              color: Colors.white
+          ),
+          decoration: InputDecoration(
+            border: OutlineInputBorder(
+              borderSide: BorderSide.none,
+              borderRadius: BorderRadius.circular(15),
+            ),
+            hintText: "Search group...",
+            hintStyle: const TextStyle(
+              color: Colors.white30,
+            ),
+            filled: true,
+            fillColor: Colors.blueGrey[800],
           ),
         ),
         actions: [
-          ElevatedButton(
-            style: ButtonStyle(
-                elevation: MaterialStateProperty.all(0),
-                fixedSize: MaterialStateProperty.all(const Size(5.0, 5.0))
+          TextButton.icon(
+            onPressed: () {},
+            label: const Text(
+              'New group',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14.0,
+              ),
             ),
-              onPressed: () {},
-              child: const Icon(Icons.add)
-          ),
+            icon: const Icon(
+              Icons.add,
+              size: 15.0,
+            ),
+          )
         ],
       ),
       backgroundColor: Colors.blueGrey[900],
       body: Center(
           child: ListView.builder(
-              itemCount: testMap.length,
+              itemCount: groupList.length,
               itemBuilder: (context, index) {
                 return Padding(
                   padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
@@ -60,9 +88,13 @@ class _OverviewState extends State<Overview> {
                     tileColor: Colors.blueGrey[700],
                     selectedTileColor: Colors.blueGrey,
                     textColor: Colors.white,
-                    onTap: () {},
-                    title: Text(testMap.keys.elementAt(index)),
-                    subtitle: Text(testMap.values.elementAt(index)),
+                    onTap: () {
+                      Navigator.pushNamed(context, '/chat', arguments: {
+                        'groupID': groupList[index],
+                      });
+                    },
+                    title: Text(BackendMethod.getInstance()!.getGroupChat(groupList[index]).getName()),
+                    subtitle: Text(BackendMethod.getInstance()!.getGroupChat(groupList[index]).getLatestMessage().getMessage()),
                     leading: const CircleAvatar(
                       child: Icon(
                         Icons.person,
@@ -71,15 +103,6 @@ class _OverviewState extends State<Overview> {
                   ),
                 );
               })),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          Navigator.pushNamed(context, '/chat');
-        },
-        child: const Icon(
-          Icons.add,
-          semanticLabel: 'New message',
-        ),
-      ),
     );
   }
 }
