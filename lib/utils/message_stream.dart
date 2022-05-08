@@ -34,15 +34,17 @@ class Message extends Comparable {
 }
 
 class GroupChat {
-  late final String _groupID;
+  late final String _id;
+  late String _name;
   late StreamController<Message> _messageStream;
+  late Message latestMessage;
 
-  GroupChat(this._groupID) {
+  GroupChat(this._id) {
     _messageStream = StreamController<Message>();
   }
 
   String getGroupID() {
-    return _groupID;
+    return _id;
   }
 
   Stream<Message> getMessageStream() {
@@ -51,9 +53,14 @@ class GroupChat {
 
   void addMessage(Message message) {
     _messageStream.add(message);
+    latestMessage = message;
   }
-}
 
-class MessageStream {
-  late Stream<String> _stream;
+  Message getLatestMessage() {
+    return latestMessage;
+  }
+
+  String getName() {
+    return _name;
+  }
 }

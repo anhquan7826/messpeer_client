@@ -1,11 +1,14 @@
 import 'package:flutter/material.dart';
 import 'dart:math';
 
-Widget messageView() {
+import 'package:messpeer_client/utils/BackendMethod.dart';
+
+Widget messageView(String? groupID) {
   List<String> message = [];
+
   return Expanded(
     child: StreamBuilder(
-        stream: testString(),
+        stream: BackendMethod.getInstance()!.getGroupChat(groupID!).getMessageStream(),
         builder: (context, snapshot) {
           if (!snapshot.hasData) {
             return const Center(
