@@ -5,66 +5,103 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
+import java.util.LinkedList;
+import java.util.Objects;
+import java.util.Queue;
 
-public class Connection extends Thread {
-    private final String serverIP = "localhost";
-    private final int serverPort = 43896;
+import io.flutter.Log;
+
+public class Connection {
+    private static final String serverIP = "192.168.0.101";
+    private static final int serverPort = 43896;
 
     private Socket socket;
     private BufferedReader bufferedReader;
     private PrintWriter printWriter;
 
-    private ServerCommunicator serverCommunicator;
-
+    private boolean connected;
     private boolean authenticated;
 
+    private Queue<String> results;
+    private Queue<String> messages;
+
     public Connection() {
+        connected = false;
         authenticated = false;
-        this.serverCommunicator = new ServerCommunicator(this);
-    }
 
-    private boolean createConnection() {
-        try {
-            socket = new Socket(serverIP, serverPort);
-            System.out.println("Established a connection to server at " + serverIP + ":" + serverPort);
-            bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            printWriter = new PrintWriter(socket.getOutputStream(), true);
-        } catch (IOException e) {
-            socket = null;
+        results = new LinkedList<>();
+        messages = new LinkedList<>();
+
+        connect();
+        if (connected)  {
+            startCommunicate();
         }
-        return true;
     }
 
-    public boolean authenticate(String username, String password) {
-        Thread thread = new Thread(new Runnable() {
+    private void connectionTest() {
+        while (true) {
+            try {
+                if (socket.getInputStream().available() < 0) {
+                    connected = false;
+                    System.out.println("Lost connection to server! Retrying...");
+                    connect();
+                    break;
+                }
+            } catch (IOException e) {
+                connected = false;
+                System.out.println("Lost connection to server! Retrying...");
+                connect();
+                break;
+            }
+        }
+    }
+
+    private void connect() {
+        new Thread(new Runnable() {
             @Override
             public void run() {
-                try {
-                    printWriter.println("INITIAL_MESSAGE:" + username + " " + password.hashCode());
-                    String message = bufferedReader.readLine().trim();
-                    if (message.equals("AUTHENTICATE_SUCCESS")) {
-                        authenticated = true;
+                while (!connected) {
+                    try {
+                        socket = new Socket(serverIP, serverPort);
+                        Log.d("TAG", "Established connection to server at " + serverIP + ":" + serverPort);
+                        bufferedReader = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+                        printWriter = new PrintWriter(socket.getOutputStream(), true);
+                        connected = true;
+                    } catch (IOException e) {
+                        connected = false;
+                        Log.d("TAG", "Cannot establish to server at " + serverIP + ":" + serverPort + ". Retrying...");
+                        try {
+                            Thread.sleep(500);
+                        } catch (InterruptedException interruptedException) {
+                            interruptedException.printStackTrace();
+                        }
                     }
-                } catch (IOException e) {
-                    authenticated = false;
                 }
+                connectionTest();
             }
-        });
-        thread.start();
-        try {
-            thread.join();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        }
-        return isAuthenticated();
+        }).start();
     }
 
-    public String getMessage() {
-        try {
-            return bufferedReader.readLine().trim();
-        } catch (IOException e) {
-            return null;
-        }
+    public void startCommunicate() {
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+                int i = 0;
+                while (connected) {
+                    try {
+                        String message = bufferedReader.readLine();
+                        Log.d("TAG", "Server " + i++ + ": " + message);
+                        if (message.startsWith("RECEIVE_MESSAGE")) {
+                            messages.add(message);
+                        } else {
+                            results.add(message);
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+        }).start();
     }
 
     public void sendMessage(String message) {
@@ -76,27 +113,37 @@ public class Connection extends Thread {
         }).start();
     }
 
-    @Override
-    public void run() {
-        while (!createConnection()) {
-            System.out.println("Cannot establish a connection to server. Retrying...");
-            try {
-                Thread.sleep(1000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-        serverCommunicator.start();
+   public boolean authenticate(String username, String password) {
+       sendMessage("INITIAL_MESSAGE:" + username + " " + password.hashCode());
+       try {
+           Thread.sleep(1000);
+       } catch (InterruptedException e) {
+           Log.d("TAG", e.toString());
+       }
+       while (results.size() != 0) {
+           String result = pollResults();
+           if (result.equals("AUTHENTICATE_SUCCESS")) {
+               Log.d("TAG", "AUTHENTICATE_SUCCESS");
+               authenticated = true;
+               return true;
+           } else if (result.equals("AUTHENTICATE_FAILED")) {
+               Log.d("TAG", "AUTHENTICATE_FAILED");
+               authenticated = false;
+               return false;
+           }
+       }
+       return false;
+   }
+
+   public boolean isConnected() {
+        return connected;
+   }
+
+    public String pollResults() {
+        return results.poll();
     }
 
-    public ServerCommunicator getServerCommunicator() throws Exception {
-        if (!this.isAlive()) {
-            throw new Exception("Connection is not running!");
-        }
-        return serverCommunicator;
-    }
-
-    public boolean isAuthenticated() {
-        return authenticated;
+    public String pollMessages() {
+        return messages.poll();
     }
 }
