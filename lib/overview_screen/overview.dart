@@ -10,17 +10,13 @@ class Overview extends StatefulWidget {
 
 class _OverviewState extends State<Overview> {
   late TextEditingController _searchController;
-  late List<String> groupList;
-
-  @override
-  void initState() {
-    _searchController = TextEditingController();
-    BackendMethod.getInstance()!.getGroupIDList();
-    super.initState();
-  }
+  late Map groupList;
 
   @override
   Widget build(BuildContext context) {
+    _searchController = TextEditingController();
+    groupList = ModalRoute.of(context)!.settings.arguments as Map;
+
     return Scaffold(
       appBar: AppBar(
         toolbarHeight: 60.0,
@@ -79,30 +75,36 @@ class _OverviewState extends State<Overview> {
           child: ListView.builder(
               itemCount: groupList.length,
               itemBuilder: (context, index) {
-                return Padding(
-                  padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
-                  child: ListTile(
-                    visualDensity: const VisualDensity(horizontal: 3, vertical: 0),
-                    contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
-                    tileColor: Colors.blueGrey[700],
-                    selectedTileColor: Colors.blueGrey,
-                    textColor: Colors.white,
-                    onTap: () {
-                      Navigator.pushNamed(context, '/chat', arguments: {
-                        'groupID': groupList[index],
-                      });
-                    },
-                    title: Text(BackendMethod.getInstance()!.getGroupChat(groupList[index]).getName()),
-                    subtitle: Text(BackendMethod.getInstance()!.getGroupChat(groupList[index]).getLatestMessage().getMessage()),
-                    leading: const CircleAvatar(
-                      child: Icon(
-                        Icons.person,
-                      ),
-                    ),
-                  ),
-                );
+                // TODO: display group tile
+                return _groupTile(groupList.keys.elementAt(index), groupList.values.elementAt(index), 'No subtitle yet!');
               })),
+    );
+  }
+
+  Widget _groupTile(String id, String title, String subtitle) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
+      child: ListTile(
+        visualDensity: const VisualDensity(horizontal: 3, vertical: 0),
+        contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+        tileColor: Colors.blueGrey[700],
+        selectedTileColor: Colors.blueGrey,
+        textColor: Colors.white,
+        onTap: () {
+          Navigator.pushNamed(context, '/chat', arguments: {
+            'groupID': id,
+          });
+        },
+        title: Text(title),
+        subtitle: Text(subtitle),
+        // TODO: add group avatar
+        leading: const CircleAvatar(
+          child: Icon(
+            Icons.person,
+          ),
+        ),
+      ),
     );
   }
 }

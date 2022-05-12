@@ -2,11 +2,12 @@ package com.group2.messpeer_client;
 
 import android.os.Build;
 import android.os.Bundle;
+import android.util.Log;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import com.group2.messpeer_client.connection.Connection;
-import java.util.Objects;
 import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.plugin.common.MethodChannel;
@@ -37,10 +38,19 @@ public class MainActivity extends FlutterActivity {
                     String command = "";
                     switch (call.method) {
                         case "authenticate":
-                            result.success(connection.authenticate(username, password));
+                            assert password != null;
+                            String rs = connection.authenticate(username, Integer.toString(password.hashCode()));
+                            Log.d("TAG", rs);
+                            result.success(rs);
+                            break;
+                        case "isAuthenticated":
+                            result.success(connection.isAuthenticated());
                             break;
                         case "getMessage":
                             result.success(connection.pollMessages());
+                            break;
+                        case "getGroupChatList":
+                            result.success(connection.getGroupChatList());
                             break;
                         case "sendMessage":
                             // TODO: fix this
