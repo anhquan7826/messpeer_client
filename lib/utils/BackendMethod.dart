@@ -43,16 +43,16 @@ class BackendMethod {
     return _chatGroups[groupID]!;
   }
 
-  List<String> getGroupIDList() {
-    return _chatGroups.keys.toList();
+  Future<dynamic> getGroupIDList() async {
+    return await _methodChannel.invokeMethod('getGroupChatList');
   }
 
-  Future<bool> authenticate(String username, String password) async {
+  Future<String> authenticate(String username, String password) async {
     return await _methodChannel.invokeMethod('authenticate',
         <String, String>{'username': username, 'password': password});
   }
 
-  Future<bool> isAuthenticated() async {
+  Future<String> isAuthenticated() async {
     return await _methodChannel.invokeMethod('isAuthenticated');
   }
 
