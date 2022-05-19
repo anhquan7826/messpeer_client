@@ -94,7 +94,7 @@ public class Connection {
                         }
                         Log.d("TAG", "Server " + "[" + i++ + "]" + ": " + message);
                         if (message.startsWith("RECEIVE_MESSAGE")) {
-                            messages.add(message);
+                            messages.offer(message.replaceFirst("RECEIVE_MESSAGE:", ""));
                         } else {
                             results.add(message);
                         }

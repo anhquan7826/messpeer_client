@@ -1,8 +1,8 @@
-import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
-import 'package:messpeer_client/utils/BackendMethod.dart';
-import 'package:messpeer_client/utils/CallState.dart';
+import 'package:messpeer_client/utils/authentication_service.dart';
+import 'package:messpeer_client/utils/group_chat_service.dart';
+import '../utils/utils.dart';
 
 class Login extends StatefulWidget {
   const Login({Key? key}) : super(key: key);
@@ -30,77 +30,35 @@ class _LoginState extends State<Login> {
   }
 
   bool _isLoading = false;
-  String _loginResult = CallState.IDLE;
-  var groupList;
-
-  late String _username;
+  bool _loginResult = false;
+  late GroupChatService gcService;
 
   Future<void> _login(String username, String password) async {
     setState(() {
       _isLoading = true;
-      _loginResult = CallState.CALLING;
     });
-    while (_loginResult == CallState.CALLING) {
-      _loginResult = await BackendMethod.getInstance()!.authenticate(username, password);
-      if (_loginResult == CallState.TRUE) {
-        _username = username;
-        groupList = CallState.CALLING;
-        while (groupList == CallState.CALLING) {
-          groupList = await BackendMethod.getInstance()!.getGroupIDList();
-        }
-      }
+    _loginResult = await AuthenticationService(methodChannel).authenticate(username: username, password: password);
+    if (_loginResult) {
+      setUsername(username);
+      gcService = GroupChatService(methodChannel: methodChannel, username: username);
+      await gcService.initService();
     }
-
     setState(() {
-      if (_loginResult == CallState.TRUE) {
-        Navigator.pushReplacementNamed(context, '/overview', arguments: groupList);
+      if (_loginResult) {
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pushReplacementNamed(context, '/overview', arguments: gcService);
+        });
       } else {
         _isLoading = false;
         showDialog(
           context: context,
           builder: (context) {
-            _loginResult = CallState.IDLE;
             return errorAlert('Error!', 'Incorrect username or password. Please try again!');
           },
         );
       }
     });
   }
-
-  /*Future<void> _login(String username, String password) async {
-    setState(() {
-      _isLoading = true;
-      _loginResult = CallState.CALLING;
-    });
-    while (_loginResult == CallState.CALLING) {
-      _loginResult = await BackendMethod.getInstance()!.authenticate(username, password);
-      if (_loginResult == CallState.TRUE) {
-        _username = username;
-        groupList = CallState.CALLING;
-        while (groupList == CallState.CALLING) {
-          groupList = await BackendMethod.getInstance()!.getGroupIDList();
-        }
-        if (groupList != CallState.ERROR) {
-          groupList = jsonDecode(groupList);
-        }
-      }
-    }
-
-    setState(() {
-      if (_loginResult == CallState.TRUE) {
-        Navigator.pushReplacementNamed(context, '/overview', arguments: groupList);
-      } else {
-        _isLoading = false;
-        showDialog(
-          context: context,
-          builder: (context) {
-            _loginResult = CallState.IDLE;
-            return errorAlert('Error!', 'Incorrect username or password. Please try again!');
-          },
-        );
-      }
-    });
-  }*/
 
   bool _validate(String username, String password) {
     // TODO: add more username and password requirements
@@ -216,7 +174,7 @@ class _LoginState extends State<Login> {
                       ),
                       minimumSize: const Size(400.0, 50.0)
                   ),
-                  label: _isLoading ? (_loginResult == CallState.TRUE ? Text('Welcome $_username!') : const Text('Signing in...')) : const Text('Sign in'),
+                  label: _isLoading ? (_loginResult ? Text('Welcome ' + username + '!') : const Text('Signing in...')) : const Text('Sign in'),
                   icon: _isLoading ? const CircularProgressIndicator(
                     color: Colors.white,
                   ) : const Icon(

@@ -15,7 +15,7 @@ import io.flutter.plugin.common.MethodChannel;
 public class MainActivity extends FlutterActivity {
     Connection connection;
 
-    public static final String CHANNEL = "com.group2.messpeer_client/communication";
+    public static final String CHANNEL = "com.group2.messpeer_client";
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -30,17 +30,15 @@ public class MainActivity extends FlutterActivity {
 
         new MethodChannel(flutterEngine.getDartExecutor().getBinaryMessenger(), CHANNEL).setMethodCallHandler(
                 (call, result) -> {
-                    String username = call.argument("username");
-                    String groupChatName = call.argument("groupChatName");
-                    String groupChatID = call.argument("groupChatID");
-                    String message = call.argument("messageObject");
-                    String password = call.argument("password");
-                    String command = "";
                     switch (call.method) {
+                        case "log":
+                            Log.d("TAG", call.argument("log"));
+                            break;
                         case "authenticate":
+                            String password = call.argument("password");
+                            String username = call.argument("username");
                             assert password != null;
                             String rs = connection.authenticate(username, Integer.toString(password.hashCode()));
-                            Log.d("TAG", rs);
                             result.success(rs);
                             break;
                         case "isAuthenticated":
@@ -53,14 +51,14 @@ public class MainActivity extends FlutterActivity {
                             result.success(connection.getGroupChatList());
                             break;
                         case "sendMessage":
-                            // TODO: fix this
-                            //connection.sendMessage(JsonMaker.MessagesJson(username, groupChatID, message, getCurrentDateTime()));
+                            String message = call.argument("message");
+                            connection.sendMessage("SEND_MESSAGE:" + message);
                             break;
-/*                        case "groupChatCreate":
+                        case "groupChatCreate":
                             command = "GROUP_CHAT_CREATE:" + groupChatName;
                             result.success(querryCommand(command));
                             break;
-                        case "groupChatDelete":
+/*                        case "groupChatDelete":
                             command = "GROUP_CHAT_DELETE:" + groupChatID;
                             result.success(querryCommand(command));
                             break;

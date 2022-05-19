@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:messpeer_client/utils/BackendMethod.dart';
+import 'package:messpeer_client/utils/group_chat_service.dart';
+import 'package:messpeer_client/utils/utils.dart';
 
 class Overview extends StatefulWidget {
   const Overview({Key? key}) : super(key: key);
@@ -10,12 +11,12 @@ class Overview extends StatefulWidget {
 
 class _OverviewState extends State<Overview> {
   late TextEditingController _searchController;
-  late Map groupList;
+  late GroupChatService gcService;
 
   @override
   Widget build(BuildContext context) {
     _searchController = TextEditingController();
-    groupList = ModalRoute.of(context)!.settings.arguments as Map;
+    gcService = ModalRoute.of(context)!.settings.arguments as GroupChatService;
 
     return Scaffold(
       appBar: AppBar(
@@ -55,7 +56,9 @@ class _OverviewState extends State<Overview> {
         ),
         actions: [
           TextButton.icon(
-            onPressed: () {},
+            onPressed: () {
+              Navigator.pushNamed(context, '/overview/add');
+            },
             label: const Text(
               'New group',
               style: TextStyle(
@@ -73,35 +76,41 @@ class _OverviewState extends State<Overview> {
       backgroundColor: Colors.blueGrey[900],
       body: Center(
           child: ListView.builder(
-              itemCount: groupList.length,
+              itemCount: gcService.getGroupChatList().length,
               itemBuilder: (context, index) {
                 // TODO: display group tile
-                return _groupTile(groupList.keys.elementAt(index), groupList.values.elementAt(index), 'No subtitle yet!');
+                return _groupTile(
+                    gcService.getGroupChatList()[index].getGroupID(),
+                    gcService.getGroupChatList()[index].getName(),
+                    gcService.getGroupChatList()[index].getLatestMessage() == Message.empty ?
+                      null :
+                      gcService.getGroupChatList()[index].getLatestMessage().getUsername() == username ?
+                        'You: ${gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()}' :
+                        gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()
+                );
               })),
     );
   }
 
-  Widget _groupTile(String id, String title, String subtitle) {
+  Widget _groupTile(String id, String title, String? subtitle) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
       child: ListTile(
         visualDensity: const VisualDensity(horizontal: 3, vertical: 0),
-        contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+        contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 15.0),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
         tileColor: Colors.blueGrey[700],
         selectedTileColor: Colors.blueGrey,
         textColor: Colors.white,
         onTap: () {
-          Navigator.pushNamed(context, '/chat', arguments: {
-            'groupID': id,
-          });
+          Navigator.pushNamed(context, '/chat', arguments: gcService.getGroupChat(id));
         },
-        title: Text(title),
-        subtitle: Text(subtitle),
+        title: Text(title, style: const TextStyle(fontSize: 20),),
+        subtitle: subtitle == null ? null : Text(subtitle),
         // TODO: add group avatar
         leading: const CircleAvatar(
           child: Icon(
-            Icons.person,
+            Icons.people,
           ),
         ),
       ),
