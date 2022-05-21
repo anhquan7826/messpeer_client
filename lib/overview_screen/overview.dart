@@ -11,17 +11,20 @@ class Overview extends StatefulWidget {
 
 class _OverviewState extends State<Overview> {
   late TextEditingController _searchController;
-  late GroupChatService gcService;
+  late GroupChatService _gcService;
+  late PageController _pageController;
+  int _selectedIndex = 0;
+  late List<AppBar> _appBars;
+  late List<Widget> _bodies;
 
   @override
   Widget build(BuildContext context) {
     _searchController = TextEditingController();
-    gcService = ModalRoute.of(context)!.settings.arguments as GroupChatService;
+    _gcService = ModalRoute.of(context)!.settings.arguments as GroupChatService;
+    _pageController = PageController();
 
-    return Scaffold(
-      appBar: AppBar(
-        toolbarHeight: 60.0,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+    _appBars = [
+      AppBar(
         centerTitle: false,
         elevation: 0,
         backgroundColor: Colors.blueGrey[900],
@@ -51,7 +54,7 @@ class _OverviewState extends State<Overview> {
               color: Colors.white30,
             ),
             filled: true,
-            fillColor: Colors.blueGrey[800],
+            fillColor: Colors.blueGrey[900],
           ),
         ),
         actions: [
@@ -61,34 +64,138 @@ class _OverviewState extends State<Overview> {
             },
             label: const Text(
               'New group',
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 14.0,
-              ),
             ),
             icon: const Icon(
               Icons.add,
-              size: 15.0,
             ),
           )
         ],
       ),
-      backgroundColor: Colors.blueGrey[900],
-      body: Center(
-          child: ListView.builder(
-              itemCount: gcService.getGroupChatList().length,
-              itemBuilder: (context, index) {
-                // TODO: display group tile
-                return _groupTile(
-                    gcService.getGroupChatList()[index].getGroupID(),
-                    gcService.getGroupChatList()[index].getName(),
-                    gcService.getGroupChatList()[index].getLatestMessage() == Message.empty ?
-                      null :
-                      gcService.getGroupChatList()[index].getLatestMessage().getUsername() == username ?
-                        'You: ${gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()}' :
-                        gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()
-                );
-              })),
+      AppBar(
+        backgroundColor: Colors.blueGrey.shade900,
+        elevation: 0,
+        title: Row(
+          children: const [
+            SizedBox(width: 5),
+            Icon(Icons.notifications_none_outlined),
+            SizedBox(width: 10),
+            Text(
+              'Announcements',
+              style: TextStyle(
+                fontSize: 20
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.add),
+            label: const Text('Subscribe'),
+          )
+        ],
+      ),
+      AppBar(
+        toolbarHeight: 200,
+        backgroundColor: Colors.blueGrey.shade900,
+        centerTitle: true,
+        elevation: 0,
+        title: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const CircleAvatar(
+              child: Icon(
+                Icons.person,
+                size: 60,
+              ),
+              radius: 60,
+            ),
+            const SizedBox(height: 20),
+            Text(
+              username,
+            )
+          ],
+        ),
+      )
+    ];
+
+    _bodies = [
+      Center(
+        child: ListView.builder(
+          itemCount: _gcService.getGroupChatList().length,
+          itemBuilder: (context, index) {
+            // TODO: display group tile
+            return _groupTile(
+              _gcService.getGroupChatList()[index].getGroupID(),
+              _gcService.getGroupChatList()[index].getName(),
+              _gcService.getGroupChatList()[index].getLatestMessage() == Message.empty ?
+              null :
+              _gcService.getGroupChatList()[index].getLatestMessage().getUsername() == username ?
+              'You: ${_gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()}' :
+              _gcService.getGroupChatList()[index].getLatestMessage().getMessageContent()
+            );
+          }
+        )
+      ),
+      const Center(
+        child: Text(
+          'Subscribe to an announcer to get announcements.',
+          style: TextStyle(
+            color: Colors.grey
+          ),
+        ),
+      ),
+      Center(
+        child: ListView.builder(
+          itemCount: _userSettingsTiles.length,
+          itemBuilder: (context, index) {
+            return Padding(
+              padding: const EdgeInsets.all(10.0),
+              child: _userSettingsTiles[index],
+            );
+          }
+        ),
+      )
+    ];
+
+    return Scaffold(
+      appBar: _appBars.elementAt(_selectedIndex),
+      backgroundColor: Colors.blueGrey.shade800,
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: (index) {
+          setState(() {
+            _selectedIndex = index;
+          });
+        },
+        children: _bodies,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: [
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.home_outlined),
+            label: 'Overview',
+          ),
+          const BottomNavigationBarItem(
+            icon: Icon(Icons.notifications_none_outlined),
+            label: 'Announcements'
+          ),
+          BottomNavigationBarItem(
+            icon: const Icon(Icons.person),
+            label: username
+          )
+        ],
+        backgroundColor: Colors.blueGrey.shade900,
+        elevation: 0,
+        unselectedItemColor: Colors.grey.shade700,
+        currentIndex: _selectedIndex,
+        onTap: (index) {
+          setState(() {
+            _selectedIndex = index;
+            _pageController.animateToPage(index, duration: const Duration(milliseconds: 200), curve: Curves.easeOut);
+          });
+        },
+      ),
     );
   }
 
@@ -103,7 +210,7 @@ class _OverviewState extends State<Overview> {
         selectedTileColor: Colors.blueGrey,
         textColor: Colors.white,
         onTap: () {
-          Navigator.pushNamed(context, '/chat', arguments: gcService.getGroupChat(id));
+          Navigator.pushNamed(context, '/chat', arguments: _gcService.getGroupChat(id));
         },
         title: Text(title, style: const TextStyle(fontSize: 20),),
         subtitle: subtitle == null ? null : Text(subtitle),
@@ -116,4 +223,24 @@ class _OverviewState extends State<Overview> {
       ),
     );
   }
+
+  final List<Widget> _userSettingsTiles = [
+    ListTile(
+      visualDensity: const VisualDensity(horizontal: 3, vertical: 0),
+      contentPadding: const EdgeInsets.symmetric(vertical: 5.0, horizontal: 10.0),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10.0)),
+      tileColor: Colors.blueGrey[700],
+      selectedTileColor: Colors.blueGrey,
+      textColor: Colors.white,
+      onTap: () {},
+      title: const Text('Log out.'),
+      leading: const Padding(
+        padding: EdgeInsets.only(left: 10.0),
+        child: Icon(
+          Icons.logout,
+          color: Colors.red,
+        ),
+      )
+    )
+  ];
 }

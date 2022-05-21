@@ -5,6 +5,8 @@ import 'package:messpeer_client/login_screen/login.dart';
 import 'package:messpeer_client/overview_screen/add_group.dart';
 import 'package:messpeer_client/overview_screen/overview.dart';
 
+import 'login_screen/signup.dart';
+
 void main() {
   runApp(const MyApp());
 }
@@ -22,6 +24,7 @@ class MyApp extends StatelessWidget {
         initialRoute: '/login',
         routes: {
           '/login': (context) => const Login(),
+          '/login/signup': (context) => const SignUp(),
           '/overview': (context) => const Overview(),
           '/chat': (context) => const Chat(),
           '/chat/settings': (context) => const GroupSettings(),

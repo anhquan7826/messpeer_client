@@ -55,8 +55,7 @@ public class MainActivity extends FlutterActivity {
                             connection.sendMessage("SEND_MESSAGE:" + message);
                             break;
                         case "groupChatCreate":
-                            command = "GROUP_CHAT_CREATE:" + groupChatName;
-                            result.success(querryCommand(command));
+                            connection.sendMessage("GROUP_CHAT_CREATE:" + call.argument("name"));
                             break;
 /*                        case "groupChatDelete":
                             command = "GROUP_CHAT_DELETE:" + groupChatID;

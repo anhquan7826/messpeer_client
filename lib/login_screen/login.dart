@@ -113,6 +113,7 @@ class _LoginState extends State<Login> {
                   autocorrect: false,
                   enableSuggestions: false,
                   controller: _usernameController,
+                  keyboardType: TextInputType.emailAddress,
                   style: const TextStyle(
                       color: Colors.white
                   ),
@@ -131,9 +132,9 @@ class _LoginState extends State<Login> {
                 ),
               ),
               Padding(
-                padding:
-                const EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
+                padding: const EdgeInsets.symmetric(vertical: 10.0, horizontal: 30.0),
                 child: TextField(
+                  keyboardType: TextInputType.visiblePassword,
                   autocorrect: false,
                   enableSuggestions: false,
                   controller: _passwordController,
@@ -199,7 +200,12 @@ class _LoginState extends State<Login> {
                 padding: const EdgeInsets.symmetric(horizontal: 50.0),
                 child: ElevatedButton(
                   autofocus: true,
-                  onPressed: () {  },
+                  onPressed: () {
+                    // Navigator.pushNamed(context, '/login/signup');
+                    showDialog(context: context, builder: (context) {
+                      return errorAlert('Sign up', 'Please contact your manager to create your account!');
+                    });
+                  },
                   child: const Text('Sign up'),
                   style: ElevatedButton.styleFrom(
                       elevation: 0,
